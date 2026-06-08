@@ -23,9 +23,11 @@
 
 | 桌面端 | 移动端 |
 |--------|--------|
-| ![桌面端](./public/screenshot-wide.png) | ![移动端](./public/screenshot-narrow.png) |
+| ![桌面端](./public/screenshot-wide.svg) | ![移动端](./public/screenshot-narrow.svg) |
 
 </div>
+
+> **注意**：当前截图为代码生成的示意图。实际界面可能略有不同。建议访问 [在线演示](https://dfhhvc.github.io/devvault-pro) 查看真实效果。
 
 ---
 
