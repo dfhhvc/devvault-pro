@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+.git
+.github
+*.md
+!README.md
+vitest.config.ts
+src/test
+src/lib/__tests__
