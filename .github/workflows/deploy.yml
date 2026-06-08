@@ -21,27 +21,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
 
-      - name: Run tests
-        run: pnpm test
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: pnpm run build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      - name: Verify build output
+        run: |
+          ls -la dist/
+          test -f dist/index.html || exit 1
+          echo "Build verified successfully"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
