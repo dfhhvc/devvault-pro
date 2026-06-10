@@ -72,7 +72,7 @@ export function PasswordTool() {
         e.preventDefault();
         generate();
       }
-      if (e.key === "d" && e.ctrlKey) {
+      if (e.key === "D" && e.ctrlKey && e.shiftKey) {
         e.preventDefault();
         setPasswords([]);
       }
