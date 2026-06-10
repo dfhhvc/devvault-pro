@@ -52,7 +52,7 @@ export function JsonValidateTool() {
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "d" && e.ctrlKey) {
+      if (e.key === "D" && e.ctrlKey && e.shiftKey) {
         e.preventDefault();
         setInput("");
         setResult(null);
