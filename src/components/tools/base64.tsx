@@ -27,9 +27,19 @@ export function Base64Tool() {
     setTimeout(() => {
       try {
         if (mode === "encode") {
-          setOutput(btoa(unescape(encodeURIComponent(input))));
+          setOutput((() => {
+            const utf8Bytes = new TextEncoder().encode(input);
+            return btoa(String.fromCharCode(...utf8Bytes));
+          })());
         } else {
-          setOutput(decodeURIComponent(escape(atob(input))));
+          setOutput((() => {
+            const binaryString = atob(input);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            return new TextDecoder().decode(bytes);
+          })());
         }
       } catch (e) {
         toast.error(`处理失败: ${e instanceof Error ? e.message : String(e)}`);
