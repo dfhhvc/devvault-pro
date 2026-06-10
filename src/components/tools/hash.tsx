@@ -225,7 +225,7 @@ export function HashTool() {
         e.preventDefault();
         compute();
       }
-      if (e.key === "d" && e.ctrlKey) {
+      if (e.key === "D" && e.ctrlKey && e.shiftKey) {
         e.preventDefault();
         setInput("");
         setResults({});
