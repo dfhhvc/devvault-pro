@@ -4,12 +4,12 @@
  */
 
 import { describe, it, expect } from "vitest";
+import crypto from "crypto";
 
 /**
  * Use Node.js crypto for MD5 testing
  */
 function md5(message: string): string {
-  const crypto = require("crypto");
   return crypto.createHash("md5").update(message).digest("hex");
 }
 
@@ -75,7 +75,7 @@ describe("Password Generation", () => {
 
       let randomByte: number;
       do {
-        const array = new Uint8Array(1);
+        const buffer = new Uint8Array(1);
         // Use Math.random for testing (not crypto secure)
         randomByte = Math.floor(Math.random() * 256);
       } while (randomByte >= maxValid);
