@@ -123,7 +123,7 @@ export function JsonCsvTool() {
         e.preventDefault();
         convert();
       }
-      if (e.key === "d" && e.ctrlKey) {
+      if (e.key === "D" && e.ctrlKey && e.shiftKey) {
         e.preventDefault();
         setInput("");
         setOutput("");
