@@ -13,7 +13,12 @@ import { toast } from "sonner";
 function base64UrlDecode(str: string): string {
   const padding = "=".repeat((4 - (str.length % 4)) % 4);
   const base64 = str.replace(/-/g, "+").replace(/_/g, "/") + padding;
-  return decodeURIComponent(escape(atob(base64)));
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
 }
 
 /**
