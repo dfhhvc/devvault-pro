@@ -62,7 +62,7 @@ export function TimestampTool() {
   // Keyboard shortcut: Ctrl+D to reset
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "d" && e.ctrlKey) {
+      if (e.key === "D" && e.ctrlKey && e.shiftKey) {
         e.preventDefault();
         const ts = Math.floor(Date.now() / 1000).toString();
         setTimestamp(ts);
