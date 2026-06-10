@@ -123,7 +123,7 @@ export function RegexTesterTool() {
   // Keyboard shortcut: Ctrl+D to clear
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "d" && e.ctrlKey) {
+      if (e.key === "D" && e.ctrlKey && e.shiftKey) {
         e.preventDefault();
         setPattern("");
         setFlags("g");
