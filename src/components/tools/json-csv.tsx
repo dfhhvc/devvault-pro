@@ -6,97 +6,32 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToolWrapper } from "@/components/tool-wrapper";
 import { toast } from "sonner";
+import { jsonToCsv, csvToJson } from "@/lib/csv";
+
+/** Maximum input size: 5MB to prevent browser freezing */
+const MAX_INPUT_SIZE = 5 * 1024 * 1024;
 
 /**
- * Converts an array of objects to CSV string.
- * Handles commas, quotes, and newlines in values.
- */
-function jsonToCsv(json: unknown): string {
-  if (!Array.isArray(json) || json.length === 0) {
-    throw new Error("JSON 必须是对象数组");
-  }
-  const keys = Array.from(new Set(json.flatMap((row) => (row && typeof row === "object" ? Object.keys(row) : []))));
-  const escape = (v: unknown) => {
-    const s = v === null || v === undefined ? "" : String(v);
-    if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-      return `"${s.replace(/"/g, '""')}"`;
-    }
-    return s;
-  };
-  const lines = [keys.join(",")];
-  for (const row of json) {
-    if (row && typeof row === "object") {
-      lines.push(keys.map((k) => escape((row as Record<string, unknown>)[k])).join(","));
-    }
-  }
-  return lines.join("\n");
-}
-
-/**
- * Parses a CSV string into an array of objects.
- * Handles quoted values and escaped quotes.
- */
-function csvToJson(csv: string): unknown[] {
-  const lines = csv.split(/\r?\n/).filter((l) => l.trim() !== "");
-  if (lines.length === 0) return [];
-  const parseLine = (line: string): string[] => {
-    const result: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQuotes) {
-        if (ch === '"') {
-          if (line[i + 1] === '"') {
-            current += '"';
-            i++;
-          } else {
-            inQuotes = false;
-          }
-        } else {
-          current += ch;
-        }
-      } else {
-        if (ch === '"') {
-          inQuotes = true;
-        } else if (ch === ",") {
-          result.push(current);
-          current = "";
-        } else {
-          current += ch;
-        }
-      }
-    }
-    result.push(current);
-    return result;
-  };
-  const headers = parseLine(lines[0]);
-  const out: Record<string, unknown>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseLine(lines[i]);
-    const row: Record<string, unknown> = {};
-    headers.forEach((h, idx) => {
-      row[h] = values[idx] ?? "";
-    });
-    out.push(row);
-  }
-  return out;
-}
-
-/**
- * JSON ↔ CSV Converter Tool
+ * JSON <-> CSV Converter Tool
+ * All processing happens locally in the browser.
  */
 export function JsonCsvTool() {
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [direction, setDirection] = useState<"json-to-csv" | "csv-to-json">("json-to-csv");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [sizeWarning, setSizeWarning] = useState(false);
+
+  useEffect(() => {
+    setSizeWarning(input.length > MAX_INPUT_SIZE);
+  }, [input]);
 
   const convert = useCallback(() => {
     if (!input.trim()) {
       setOutput("");
       return;
     }
+    if (input.length > MAX_INPUT_SIZE) return;
     setIsProcessing(true);
     setTimeout(() => {
       try {
@@ -108,7 +43,7 @@ export function JsonCsvTool() {
           setOutput(JSON.stringify(obj, null, 2));
         }
       } catch (e) {
-        toast.error(`转换失败: ${e instanceof Error ? e.message : String(e)}`);
+        toast.error(`\u8f6c\u6362\u5931\u8d25: ${e instanceof Error ? e.message : String(e)}`);
         setOutput("");
       } finally {
         setIsProcessing(false);
@@ -135,8 +70,8 @@ export function JsonCsvTool() {
 
   return (
     <ToolWrapper
-      title="JSON ↔ CSV"
-      description="JSON 与 CSV 互转"
+      title="JSON \u2194 CSV"
+      description="JSON \u4e0e CSV \u4e92\u8f6c"
       outputValue={output}
       onClear={() => {
         setInput("");
@@ -147,30 +82,33 @@ export function JsonCsvTool() {
       <div className="flex flex-col gap-4 h-full">
         <Tabs value={direction} onValueChange={(v) => setDirection(v as typeof direction)}>
           <TabsList>
-            <TabsTrigger value="json-to-csv">JSON → CSV</TabsTrigger>
-            <TabsTrigger value="csv-to-json">CSV → JSON</TabsTrigger>
+            <TabsTrigger value="json-to-csv">JSON {"\u2192"} CSV</TabsTrigger>
+            <TabsTrigger value="csv-to-json">CSV {"\u2192"} JSON</TabsTrigger>
           </TabsList>
         </Tabs>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">
-              {direction === "json-to-csv" ? "JSON 输入" : "CSV 输入"}
+              {direction === "json-to-csv" ? "JSON \u8f93\u5165" : "CSV \u8f93\u5165"}
             </label>
             <Textarea
               className="flex-1 font-mono text-sm resize-none"
               placeholder={
                 direction === "json-to-csv"
-                  ? "[{\"name\":\"A\",\"age\":1}]"
+                  ? '[{"name":"A","age":1}]'
                   : "name,age\nA,1"
               }
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
+            {sizeWarning && (
+              <p className="text-xs text-destructive">{"\u8f93\u5165\u8d85\u8fc7 5MB\uff0c\u53ef\u80fd\u5bfc\u81f4\u6d4f\u89c8\u5668\u5361\u987f"}</p>
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium">
-              {direction === "json-to-csv" ? "CSV 输出" : "JSON 输出"}
+              {direction === "json-to-csv" ? "CSV \u8f93\u51fa" : "JSON \u8f93\u51fa"}
             </label>
             <Textarea
               className="flex-1 font-mono text-sm resize-none"
@@ -181,8 +119,8 @@ export function JsonCsvTool() {
         </div>
 
         <div className="flex justify-end">
-          <Button onClick={convert} disabled={isProcessing}>
-            {isProcessing ? "转换中..." : "转换"}
+          <Button onClick={convert} disabled={isProcessing || sizeWarning}>
+            {isProcessing ? "\u8f6c\u6362\u4e2d..." : "\u8f6c\u6362"}
           </Button>
         </div>
       </div>

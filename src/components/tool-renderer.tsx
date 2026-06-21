@@ -2,6 +2,7 @@
  * Tool Renderer
  * Maps tool IDs to their corresponding components.
  * All tool components are imported here for centralized routing.
+ * Wraps each tool in an ErrorBoundary to prevent full-page crashes.
  */
 
 import { JsonFormatTool } from "@/components/tools/json-format";
@@ -20,6 +21,7 @@ import { UuidTool } from "@/components/tools/uuid";
 import { PasswordTool } from "@/components/tools/password";
 import { TimestampTool } from "@/components/tools/timestamp";
 import { TimezoneTool } from "@/components/tools/timezone";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const toolMap: Record<string, React.ComponentType> = {
   "json-format": JsonFormatTool,
@@ -45,9 +47,13 @@ export function ToolRenderer({ toolId }: { toolId: string }) {
   if (!Component) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground">
-        未知工具
+        {"\u672a\u77e5\u5de5\u5177"}
       </div>
     );
   }
-  return <Component />;
+  return (
+    <ErrorBoundary>
+      <Component />
+    </ErrorBoundary>
+  );
 }

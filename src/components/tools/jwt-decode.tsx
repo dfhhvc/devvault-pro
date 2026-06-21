@@ -5,21 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ToolWrapper } from "@/components/tool-wrapper";
 import { toast } from "sonner";
-
-/**
- * Decodes a Base64Url-encoded string to UTF-8 text.
- * Base64Url uses '-' instead of '+' and '_' instead of '/'.
- */
-function base64UrlDecode(str: string): string {
-  const padding = "=".repeat((4 - (str.length % 4)) % 4);
-  const base64 = str.replace(/-/g, "+").replace(/_/g, "/") + padding;
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return new TextDecoder().decode(bytes);
-}
+import { decodeJwt } from "@/lib/jwt";
 
 /**
  * JWT Decode Tool
@@ -31,9 +17,6 @@ function base64UrlDecode(str: string): string {
  * - It does NOT VERIFY the SIGNATURE (cryptographic validation)
  *   because signature verification requires the secret key,
  *   which only the issuing server possesses.
- *
- * To fully verify a JWT, you need the secret/public key from
- * the token issuer and must perform HMAC/RSA verification.
  */
 export function JwtDecodeTool() {
   const [input, setInput] = useState("");
@@ -54,23 +37,13 @@ export function JwtDecodeTool() {
     setIsProcessing(true);
     setTimeout(() => {
       try {
-        const parts = input.trim().split(".");
-        if (parts.length !== 3) throw new Error("JWT 必须由三部分组成（Header.Payload.Signature）");
-        const headerJson = JSON.stringify(JSON.parse(base64UrlDecode(parts[0])), null, 2);
-        const payloadObj = JSON.parse(base64UrlDecode(parts[1]));
-        const payloadJson = JSON.stringify(payloadObj, null, 2);
-        setHeader(headerJson);
-        setPayload(payloadJson);
-        setSignature(parts[2]);
-
-        if (typeof payloadObj.exp === "number") {
-          const now = Math.floor(Date.now() / 1000);
-          setExpStatus(payloadObj.exp > now ? "valid" : "expired");
-        } else {
-          setExpStatus("none");
-        }
+        const result = decodeJwt(input);
+        setHeader(result.header);
+        setPayload(result.payload);
+        setSignature(result.signature);
+        setExpStatus(result.expStatus);
       } catch (e) {
-        toast.error(`解码失败: ${e instanceof Error ? e.message : String(e)}`);
+        toast.error(`\u89e3\u7801\u5931\u8d25: ${e instanceof Error ? e.message : String(e)}`);
         setHeader("");
         setPayload("");
         setSignature("");
@@ -103,8 +76,8 @@ export function JwtDecodeTool() {
 
   return (
     <ToolWrapper
-      title="JWT 解码"
-      description="解码 JWT Token（不验证签名）"
+      title="JWT \u89e3\u7801"
+      description="JWT \u89e3\u7801\uff08\u4e0d\u9a8c\u8bc1\u7b7e\u540d\uff09"
       onClear={() => {
         setInput("");
         setHeader("");
@@ -116,8 +89,7 @@ export function JwtDecodeTool() {
     >
       <div className="flex flex-col gap-4 h-full">
         <div className="p-3 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs">
-          <strong>安全提示：</strong>此工具仅解码 JWT 内容并检查过期时间。
-          签名验证需要发行方的密钥，本工具不进行加密验证。
+          <strong>{"\u5b89\u5168\u63d0\u793a\uff1a"}</strong>{"\u6b64\u5de5\u5177\u4ec5\u89e3\u7801 JWT \u5185\u5bb9\u5e76\u68c0\u67e5\u8fc7\u671f\u65f6\u95f4\u3002\u7b7e\u540d\u9a8c\u8bc1\u9700\u8981\u53d1\u884c\u65b9\u7684\u5bc6\u94a5\uff0c\u672c\u5de5\u5177\u4e0d\u8fdb\u884c\u52a0\u5bc6\u9a8c\u8bc1\u3002"}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -134,11 +106,11 @@ export function JwtDecodeTool() {
               onClick={decode}
               className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
             >
-              解码
+              {"\u89e3\u7801"}
             </button>
             {expStatus !== "none" && (
               <Badge variant={expStatus === "valid" ? "default" : "destructive"}>
-                {expStatus === "valid" ? "未过期" : "已过期"}
+                {expStatus === "valid" ? "\u672a\u8fc7\u671f" : "\u5df2\u8fc7\u671f"}
               </Badge>
             )}
           </div>
@@ -156,7 +128,7 @@ export function JwtDecodeTool() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium">Signature（仅显示，未验证）</label>
+          <label className="text-sm font-medium">Signature{"\uff08\u4ec5\u663e\u793a\uff0c\u672a\u9a8c\u8bc1\uff09"}</label>
           <Textarea className="font-mono text-sm resize-none" rows={2} readOnly value={signature} />
         </div>
       </div>

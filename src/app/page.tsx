@@ -62,7 +62,7 @@ export default function Home() {
             </Sheet>
             <div className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-sm">DevVault</span>
+              <span className="font-semibold text-sm">DevVault Pro</span>
             </div>
             {tool && (
               <span className="text-sm text-muted-foreground hidden sm:inline">

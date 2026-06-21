@@ -15,6 +15,9 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
+# FIX: Set basePath to empty for Docker (nginx serves from root, not /devvault-pro)
+ENV NEXT_PUBLIC_BASE_PATH=""
+
 # Build the application
 RUN pnpm build
 

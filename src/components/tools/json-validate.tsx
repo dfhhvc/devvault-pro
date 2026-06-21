@@ -4,6 +4,10 @@ import { useState, useCallback, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ToolWrapper } from "@/components/tool-wrapper";
+import { validateJson } from "@/lib/json";
+
+/** Maximum input size: 5MB to prevent browser freezing */
+const MAX_INPUT_SIZE = 5 * 1024 * 1024;
 
 /**
  * JSON Validate Tool
@@ -12,39 +16,30 @@ import { ToolWrapper } from "@/components/tool-wrapper";
  */
 export function JsonValidateTool() {
   const [input, setInput] = useState("");
-  const [result, setResult] = useState<{
-    valid: boolean;
-    message: string;
-    line?: number;
-    column?: number;
-  } | null>(null);
+  const [result, setResult] = useState<ReturnType<typeof validateJson> | null>(null);
+  const [sizeWarning, setSizeWarning] = useState(false);
+
+  useEffect(() => {
+    setSizeWarning(input.length > MAX_INPUT_SIZE);
+  }, [input]);
 
   const validate = useCallback(() => {
     if (!input.trim()) {
       setResult(null);
       return;
     }
-    try {
-      JSON.parse(input);
-      setResult({ valid: true, message: "JSON 格式正确" });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      const lineMatch = msg.match(/line\s+(\d+)/i);
-      const colMatch = msg.match(/column\s+(\d+)/i);
-      setResult({
-        valid: false,
-        message: msg,
-        line: lineMatch ? parseInt(lineMatch[1], 10) : undefined,
-        column: colMatch ? parseInt(colMatch[1], 10) : undefined,
-      });
-    }
+    if (input.length > MAX_INPUT_SIZE) return;
+    setResult(validateJson(input));
   }, [input]);
 
   // Auto-validate on input change with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (input.trim()) validate();
-      else setResult(null);
+      if (input.trim() && input.length <= MAX_INPUT_SIZE) {
+        validate();
+      } else {
+        setResult(null);
+      }
     }, 500);
     return () => clearTimeout(timer);
   }, [input, validate]);
@@ -64,8 +59,8 @@ export function JsonValidateTool() {
 
   return (
     <ToolWrapper
-      title="JSON 验证"
-      description="验证 JSON 语法并定位错误"
+      title="JSON \u9a8c\u8bc1"
+      description={"\u9a8c\u8bc1 JSON \u8bed\u6cd5\u5e76\u5b9a\u4f4d\u9519\u8bef"}
       onClear={() => {
         setInput("");
         setResult(null);
@@ -73,25 +68,29 @@ export function JsonValidateTool() {
     >
       <div className="flex flex-col gap-4 h-full">
         <div className="flex flex-col gap-2 flex-1 min-h-0">
-          <label className="text-sm font-medium">输入 JSON</label>
+          <label className="text-sm font-medium">{"\u8f93\u5165 JSON"}</label>
           <Textarea
             className="flex-1 font-mono text-sm resize-none"
-            placeholder="在此粘贴 JSON..."
+            placeholder={"\u5728\u6b64\u7c98\u8d34 JSON..."}
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
+          {sizeWarning && (
+            <p className="text-xs text-destructive">{"\u8f93\u5165\u8d85\u8fc7 5MB\uff0c\u53ef\u80fd\u5bfc\u81f4\u6d4f\u89c8\u5668\u5361\u987f"}</p>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={validate}
             className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            disabled={sizeWarning}
           >
-            验证
+            {"\u9a8c\u8bc1"}
           </button>
           {result && (
             <Badge variant={result.valid ? "default" : "destructive"}>
-              {result.valid ? "有效" : "无效"}
+              {result.valid ? "\u6709\u6548" : "\u65e0\u6548"}
             </Badge>
           )}
         </div>
@@ -107,8 +106,8 @@ export function JsonValidateTool() {
             <div className="font-medium">{result.message}</div>
             {result.line !== undefined && (
               <div className="text-xs mt-1 opacity-80">
-                行: {result.line}
-                {result.column !== undefined ? `, 列: ${result.column}` : ""}
+                {"\u884c: "}{result.line}
+                {result.column !== undefined ? `, \u5217: ${result.column}` : ""}
               </div>
             )}
           </div>

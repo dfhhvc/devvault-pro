@@ -2,26 +2,37 @@
  * Service Worker for DevVault Pro PWA
  * Implements stale-while-revalidate caching for offline support.
  * All resources are served locally — no external data requests.
+ *
+ * FIX: Uses self.registration.scope to dynamically determine the base path,
+ * so caching works correctly regardless of deployment path
+ * (GitHub Pages /devvault-pro/ or Docker root /).
  */
 
-const CACHE_NAME = "devvault-pro-v2";
+const CACHE_NAME = "devvault-pro-v3";
+
+/**
+ * Dynamically determine the base path from the SW registration scope.
+ * This ensures cache URLs match actual asset URLs regardless of basePath.
+ */
+const BASE_PATH = new URL(self.registration.scope).pathname;
+
 const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/favicon.ico",
-  "/icon-16.png",
-  "/icon-32.png",
-  "/icon-48.png",
-  "/icon-72.png",
-  "/icon-96.png",
-  "/icon-128.png",
-  "/icon-144.png",
-  "/icon-152.png",
-  "/icon-192.png",
-  "/icon-384.png",
-  "/icon-512.png",
-  "/apple-touch-icon.png",
+  BASE_PATH,
+  BASE_PATH + "index.html",
+  BASE_PATH + "manifest.json",
+  BASE_PATH + "favicon.ico",
+  BASE_PATH + "icon-16.png",
+  BASE_PATH + "icon-32.png",
+  BASE_PATH + "icon-48.png",
+  BASE_PATH + "icon-72.png",
+  BASE_PATH + "icon-96.png",
+  BASE_PATH + "icon-128.png",
+  BASE_PATH + "icon-144.png",
+  BASE_PATH + "icon-152.png",
+  BASE_PATH + "icon-192.png",
+  BASE_PATH + "icon-384.png",
+  BASE_PATH + "icon-512.png",
+  BASE_PATH + "apple-touch-icon.png",
 ];
 
 /**
@@ -61,10 +72,10 @@ self.addEventListener("activate", (event) => {
  */
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  
+
   // Skip non-GET requests
   if (request.method !== "GET") return;
-  
+
   // Skip external requests (safety check)
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
@@ -72,7 +83,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cachedResponse = await cache.match(request);
-      
+
       // Return cached response immediately
       if (cachedResponse) {
         // Revalidate in background
@@ -83,10 +94,10 @@ self.addEventListener("fetch", (event) => {
         }).catch(() => {
           // Network failed, cached version is already served
         });
-        
+
         return cachedResponse;
       }
-      
+
       // Not in cache: fetch from network
       try {
         const networkResponse = await fetch(request);

@@ -1,53 +1,38 @@
 # Changelog
 
-所有 notable 变更都将记录在此文件中。
+All notable changes to this project will be documented in this file.
 
-格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
-并且本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0] - 2026-06-21
 
-## [1.0.0] - 2024-06-08
+### Fixed
+- **MD5 UTF-8 encoding bug**: MD5 now uses TextEncoder (UTF-8) instead of charCodeAt (UTF-16), producing correct hashes for Chinese characters and Emoji
+- **Tests now import actual source code**: All 4 test files were rewritten to import from `src/lib/` instead of re-implementing functions inline
+- **Service Worker basePath conflict**: SW now dynamically determines basePath from registration scope, fixing cache misses on GitHub Pages
+- **Docker deployment broken**: basePath is now configurable via `NEXT_PUBLIC_BASE_PATH` env var, set to empty for Docker
+- **PWA manifest paths**: Changed from absolute (`/icon.png`) to relative (`icon.png`) paths so they resolve correctly under any basePath
+- **Naming inconsistency**: All UI titles, metadata, and manifest now consistently say "DevVault Pro" (was "DevVault" in some places)
+- **Copyright year**: Fixed from 2024 to 2026
+- **CI Node matrix**: Removed Node 18 (incompatible with Next.js 16), now tests Node 20 and 22
 
 ### Added
-- 初始发布 DevVault Pro
-- 15 个开发者工具（JSON、编码、JWT、正则、哈希、时间等）
-- 完整的单元测试（44 个测试用例）
-- PWA 支持（Service Worker 离线缓存）
-- 深色/浅色主题切换
-- 键盘快捷键支持
-- Docker 部署支持
+- **Error Boundary**: Tool components are now wrapped in React Error Boundary to prevent full-page white screen on errors
+- **Input size limits**: All text-processing tools now warn and block processing for inputs over 5MB
+- **JWT test suite**: New test file for JWT decode functionality
+- **Extracted lib modules**: Pure logic extracted to `src/lib/crypto.ts`, `encoding.ts`, `json.ts`, `csv.ts`, `jwt.ts` for testability
 
-### Fixed（相比原版 DevVault）
-- Service Worker 缓存策略升级为 Stale-While-Revalidate
-- JWT 工具添加明确的安全提示（标注不验证签名）
-- 正则高亮修复捕获组冲突问题
-- 密码生成器使用 Rejection Sampling 消除随机偏置
-- HTML Entity 解码改为纯 JavaScript 实现，移除 innerHTML
-- TypeScript 升级到 5.5+
+### Changed
+- **Security claim accuracy**: README now correctly notes that theme preference is stored in localStorage (was falsely claiming "Nothing in localStorage/IndexedDB")
+- **SW cache version**: Bumped to v3 to invalidate old caches
 
-### Security
-- 消除 XSS 风险（移除 innerHTML）
-- 密码学安全随机数生成
-- 纯前端实现，零数据上传
+## [1.0.0] - 2026-06-08
 
----
-
-## 版本说明
-
-### 版本号格式
-
-`MAJOR.MINOR.PATCH`
-
-- **MAJOR**：不兼容的 API 变更
-- **MINOR**：向下兼容的功能添加
-- **PATCH**：向下兼容的问题修复
-
-### 标签说明
-
-- `Added`：新功能
-- `Changed`：现有功能的变更
-- `Deprecated`：即将移除的功能
-- `Removed`：已移除的功能
-- `Fixed`：Bug 修复
-- `Security`：安全相关的修复
+### Initial release
+- 15+ developer tools (JSON, encoding, JWT, regex, hash, UUID, time)
+- 100% client-side, zero data upload
+- PWA offline support
+- Dark/light theme
+- Docker support
+- 44 tests

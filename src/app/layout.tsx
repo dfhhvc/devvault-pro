@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 export const metadata: Metadata = {
-  title: "DevVault - Offline Developer Privacy Toolbox",
+  title: "DevVault Pro - Offline Developer Privacy Toolbox",
   description:
     "100% local, zero data upload. JSON, JWT, Base64, regex, hash, UUID, time tools — all in your browser.",
   manifest: "/manifest.json",

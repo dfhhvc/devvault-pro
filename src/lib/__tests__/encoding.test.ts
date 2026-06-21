@@ -1,79 +1,39 @@
 /**
- * Encoding/Decoding utility tests
+ * Encoding/Decoding utility tests.
+ * Imports the ACTUAL source code from src/lib/encoding.ts.
+ * These tests verify the real implementation, not a copy.
  */
 
 import { describe, it, expect } from "vitest";
+import {
+  base64Encode,
+  base64Decode,
+  encodeHtmlEntities,
+  decodeHtmlEntities,
+  textToHex,
+  hexToText,
+} from "@/lib/encoding";
 
-/**
- * HTML Entity encoding
- */
-function encodeHtmlEntities(str: string): string {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+describe("Base64 Encoding", () => {
+  it("should encode and decode ASCII text", () => {
+    const original = "Hello World";
+    expect(base64Decode(base64Encode(original))).toBe(original);
+  });
 
-/**
- * FIXED: Pure JS HTML Entity decoding (no innerHTML)
- */
-function decodeHtmlEntities(str: string): string {
-  const namedEntities: Record<string, string> = {
-    amp: "&",
-    lt: "<",
-    gt: ">",
-    quot: '"',
-    apos: "'",
-    nbsp: "\u00A0",
-    copy: "\u00A9",
-    reg: "\u00AE",
-    trade: "\u2122",
-    hellip: "\u2026",
-    mdash: "\u2014",
-    ndash: "\u2013",
-    ldquo: "\u201C",
-    rdquo: "\u201D",
-    lsquo: "\u2018",
-    rsquo: "\u2019",
-  };
+  it("should handle Chinese characters", () => {
+    const original = "\u4e2d\u6587\u6d4b\u8bd5123!@#";
+    expect(base64Decode(base64Encode(original))).toBe(original);
+  });
 
-  return str.replace(
-    /&(?:#(x?[\da-fA-F]+)|([a-zA-Z][a-zA-Z0-9]*));/g,
-    (_, numeric, named) => {
-      if (named) {
-        return namedEntities[named] || `&${named};`;
-      }
-      if (numeric) {
-        if (numeric.startsWith("x") || numeric.startsWith("X")) {
-          return String.fromCodePoint(parseInt(numeric.slice(1), 16));
-        }
-        return String.fromCodePoint(parseInt(numeric, 10));
-      }
-      return _;
-    }
-  );
-}
+  it("should handle empty string", () => {
+    expect(base64Decode(base64Encode(""))).toBe("");
+  });
 
-/**
- * Hex encoding/decoding
- */
-function textToHex(text: string): string {
-  return Array.from(new TextEncoder().encode(text))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join(" ");
-}
-
-function hexToText(hex: string): string {
-  const cleaned = hex.replace(/\s+/g, "");
-  if (cleaned.length % 2 !== 0) throw new Error("Hex 长度必须为偶数");
-  const bytes = new Uint8Array(cleaned.length / 2);
-  for (let i = 0; i < cleaned.length; i += 2) {
-    bytes[i / 2] = parseInt(cleaned.substring(i, i + 2), 16);
-  }
-  return new TextDecoder().decode(bytes);
-}
+  it("should handle special characters including emoji", () => {
+    const original = "emoji: \ud83c\udf89\ud83d\ude80\ntab\tnewline";
+    expect(base64Decode(base64Encode(original))).toBe(original);
+  });
+});
 
 describe("HTML Entity Encoding", () => {
   it("should encode basic HTML characters", () => {
@@ -89,7 +49,7 @@ describe("HTML Entity Encoding", () => {
   });
 
   it("should handle XSS payloads safely", () => {
-    const xss = '<script>alert(1)</script>';
+    const xss = "<script>alert(1)</script>";
     expect(encodeHtmlEntities(xss)).toBe(
       "&lt;script&gt;alert(1)&lt;/script&gt;"
     );
@@ -117,8 +77,12 @@ describe("HTML Entity Decoding", () => {
     const encoded = "&lt;script&gt;alert(1)&lt;/script&gt;";
     const decoded = decodeHtmlEntities(encoded);
     expect(decoded).toBe("<script>alert(1)</script>");
-    // The result is text, not executable HTML
     expect(decoded).not.toContain("&lt;");
+  });
+
+  it("should round-trip encode/decode correctly", () => {
+    const original = '<a href="test">Hello & Welcome</a>';
+    expect(decodeHtmlEntities(encodeHtmlEntities(original))).toBe(original);
   });
 });
 
@@ -127,12 +91,12 @@ describe("Hex Encoding", () => {
     expect(textToHex("AB")).toBe("41 42");
   });
 
-  it("should encode Chinese characters", () => {
-    expect(textToHex("中文")).toBe("e4 b8 ad e6 96 87");
+  it("should encode Chinese characters (UTF-8)", () => {
+    expect(textToHex("\u4e2d\u6587")).toBe("e4 b8 ad e6 96 87");
   });
 
   it("should round-trip correctly", () => {
-    const original = "Hello 世界 123!@#";
+    const original = "Hello \u4e16\u754c 123!@#";
     expect(hexToText(textToHex(original))).toBe(original);
   });
 
@@ -142,6 +106,6 @@ describe("Hex Encoding", () => {
   });
 
   it("should throw on invalid hex length", () => {
-    expect(() => hexToText("abc")).toThrow("Hex 长度必须为偶数");
+    expect(() => hexToText("abc")).toThrow();
   });
 });

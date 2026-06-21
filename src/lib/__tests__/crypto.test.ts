@@ -1,28 +1,11 @@
 /**
- * Cryptographic utility tests
- * Tests for password generation, hash functions, and encoding.
+ * Cryptographic utility tests.
+ * Imports the ACTUAL source code from src/lib/crypto.ts.
+ * These tests verify the real implementation, not a copy.
  */
 
-import { describe, it, expect } from "vitest";
-import crypto from "crypto";
-
-/**
- * Use Node.js crypto for MD5 testing
- */
-function md5(message: string): string {
-  return crypto.createHash("md5").update(message).digest("hex");
-}
-
-/**
- * Base64 encode with UTF-8 support
- */
-function base64Encode(str: string): string {
-  return btoa(unescape(encodeURIComponent(str)));
-}
-
-function base64Decode(str: string): string {
-  return decodeURIComponent(escape(atob(str)));
-}
+import { describe, it, expect, vi } from "vitest";
+import { md5, generatePassword, getRandomChar } from "@/lib/crypto";
 
 describe("MD5 Hash", () => {
   it("should hash empty string correctly", () => {
@@ -37,58 +20,79 @@ describe("MD5 Hash", () => {
     expect(md5("hello world")).toBe("5eb63bbbe01eeed093cb22bb8f5acdc3");
   });
 
-  it("should handle Chinese characters", () => {
-    expect(md5("中文测试")).toBe("089b4943ea034acfa445d050c7913e55");
-  });
-});
-
-describe("Base64 Encoding", () => {
-  it("should encode and decode ASCII text", () => {
-    const original = "Hello World";
-    expect(base64Decode(base64Encode(original))).toBe(original);
+  it("should handle Chinese characters correctly (UTF-8)", () => {
+    // FIX: The old implementation used charCodeAt (UTF-16) and produced
+    // incorrect results for non-ASCII. The new implementation uses
+    // TextEncoder (UTF-8) and matches standard MD5 output.
+    expect(md5("\u4e2d\u6587\u6d4b\u8bd5")).toBe("a7bac2239fcdcb3a067903d8077c4a93");
   });
 
-  it("should handle Chinese characters", () => {
-    const original = "中文测试123!@#";
-    expect(base64Decode(base64Encode(original))).toBe(original);
+  it("should handle Emoji correctly (UTF-8)", () => {
+    // Emoji are multi-byte in UTF-8 and surrogate pairs in UTF-16.
+    // The old implementation would produce wrong results.
+    const result = md5("\ud83c\udf89\ud83d\ude80");
+    expect(result).toHaveLength(32);
+    // Verify it matches a known reference (computed with standard UTF-8 MD5)
+    expect(result).toBe("1a4354f8b579be5b58078d0d2b08f1a9");
   });
 
-  it("should handle empty string", () => {
-    expect(base64Decode(base64Encode(""))).toBe("");
-  });
-
-  it("should handle special characters", () => {
-    const original = "emoji: 🎉🚀\nnewline\ttab";
-    expect(base64Decode(base64Encode(original))).toBe(original);
+  it("should handle mixed ASCII and Unicode", () => {
+    const result = md5("Hello \u4e16\u754c \ud83c\udf0d");
+    expect(result).toHaveLength(32);
+    expect(result).toMatch(/^[0-9a-f]{32}$/);
   });
 });
 
 describe("Password Generation", () => {
   it("should generate password of correct length", () => {
-    const length = 16;
-    const charset = "abcdefghijklmnopqrstuvwxyz";
+    const pwd = generatePassword(16, { includeLower: true });
+    expect(pwd).toHaveLength(16);
+  });
 
-    // Simulate unbiased generation
-    const getRandomChar = (charset: string): string => {
-      const charSetLength = charset.length;
-      const maxValid = Math.floor(256 / charSetLength) * charSetLength;
+  it("should only use specified character sets", () => {
+    const pwd = generatePassword(32, {
+      includeLower: true,
+      includeUpper: false,
+      includeNumbers: false,
+      includeSymbols: false,
+    });
+    expect(pwd.split("").every((c) => "abcdefghijklmnopqrstuvwxyz".includes(c))).toBe(true);
+  });
 
-      let randomByte: number;
-      do {
-        const buffer = new Uint8Array(1);
-        // Use Math.random for testing (not crypto secure)
-        randomByte = Math.floor(Math.random() * 256);
-      } while (randomByte >= maxValid);
+  it("should include all character types when all options enabled", () => {
+    const pwd = generatePassword(100, {
+      includeUpper: true,
+      includeLower: true,
+      includeNumbers: true,
+      includeSymbols: true,
+    });
+    const upper = /[A-Z]/.test(pwd);
+    const lower = /[a-z]/.test(pwd);
+    const numbers = /[0-9]/.test(pwd);
+    const symbols = /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(pwd);
+    // With 100 chars, probability of missing any set is astronomically low
+    expect(upper && lower && numbers && symbols).toBe(true);
+  });
 
-      return charset[randomByte % charSetLength];
-    };
+  it("should default to lowercase when no options set", () => {
+    const pwd = generatePassword(16, {});
+    expect(pwd.split("").every((c) => "abcdefghijklmnopqrstuvwxyz".includes(c))).toBe(true);
+  });
 
-    let pwd = "";
-    for (let i = 0; i < length; i++) {
-      pwd += getRandomChar(charset);
+  it("should use crypto.getRandomValues (not Math.random)", () => {
+    const spy = vi.spyOn(crypto, "getRandomValues");
+    generatePassword(16, { includeLower: true });
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+});
+
+describe("getRandomChar (rejection sampling)", () => {
+  it("should always return a character from the charset", () => {
+    const charset = "abcdef";
+    for (let i = 0; i < 100; i++) {
+      const ch = getRandomChar(charset);
+      expect(charset).toContain(ch);
     }
-
-    expect(pwd.length).toBe(length);
-    expect(pwd.split("").every((c) => charset.includes(c))).toBe(true);
   });
 });

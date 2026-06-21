@@ -1,46 +1,11 @@
 /**
- * JSON utility tests
+ * JSON utility tests.
+ * Imports the ACTUAL source code from src/lib/json.ts.
+ * These tests verify the real implementation, not a copy.
  */
 
 import { describe, it, expect } from "vitest";
-
-/**
- * JSON formatter
- */
-function formatJson(input: string): string {
-  const obj = JSON.parse(input);
-  return JSON.stringify(obj, null, 2);
-}
-
-function minifyJson(input: string): string {
-  const obj = JSON.parse(input);
-  return JSON.stringify(obj);
-}
-
-/**
- * JSON validator with line/column info
- */
-function validateJson(input: string): {
-  valid: boolean;
-  message: string;
-  line?: number;
-  column?: number;
-} {
-  try {
-    JSON.parse(input);
-    return { valid: true, message: "JSON 格式正确" };
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    const lineMatch = msg.match(/line\s+(\d+)/i);
-    const colMatch = msg.match(/column\s+(\d+)/i);
-    return {
-      valid: false,
-      message: msg,
-      line: lineMatch ? parseInt(lineMatch[1], 10) : undefined,
-      column: colMatch ? parseInt(colMatch[1], 10) : undefined,
-    };
-  }
-}
+import { formatJson, minifyJson, escapeJson, unescapeJson, validateJson } from "@/lib/json";
 
 describe("JSON Formatting", () => {
   it("should format compact JSON", () => {
@@ -62,8 +27,23 @@ describe("JSON Formatting", () => {
   });
 
   it("should handle arrays", () => {
-    const input = '[1,2,3]';
-    expect(formatJson(input)).toContain('[\n  1,\n  2,\n  3\n]');
+    const input = "[1,2,3]";
+    expect(formatJson(input)).toContain("[\n  1,\n  2,\n  3\n]");
+  });
+});
+
+describe("JSON Escape/Unescape", () => {
+  it("should escape special characters", () => {
+    expect(escapeJson('hello "world"')).toBe('hello \\"world\\"');
+  });
+
+  it("should unescape special characters", () => {
+    expect(unescapeJson('hello \\"world\\"')).toBe('hello "world"');
+  });
+
+  it("should round-trip escape/unescape", () => {
+    const original = 'Line1\nLine2\t"quoted"';
+    expect(unescapeJson(escapeJson(original))).toBe(original);
   });
 });
 

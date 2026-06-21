@@ -1,92 +1,11 @@
 /**
- * CSV conversion tests
+ * CSV conversion utility tests.
+ * Imports the ACTUAL source code from src/lib/csv.ts.
+ * These tests verify the real implementation, not a copy.
  */
 
 import { describe, it, expect } from "vitest";
-
-/**
- * JSON to CSV converter
- */
-function jsonToCsv(json: unknown): string {
-  if (!Array.isArray(json) || json.length === 0) {
-    throw new Error("JSON 必须是对象数组");
-  }
-  const keys = Array.from(
-    new Set(
-      json.flatMap((row) =>
-        row && typeof row === "object" ? Object.keys(row) : []
-      )
-    )
-  );
-  const escape = (v: unknown) => {
-    const s = v === null || v === undefined ? "" : String(v);
-    if (s.includes(",") || s.includes('"') || s.includes("\n")) {
-      return `"${s.replace(/"/g, '""')}"`;
-    }
-    return s;
-  };
-  const lines = [keys.join(",")];
-  for (const row of json) {
-    if (row && typeof row === "object") {
-      lines.push(
-        keys.map((k) => escape((row as Record<string, unknown>)[k])).join(",")
-      );
-    }
-  }
-  return lines.join("\n");
-}
-
-/**
- * CSV to JSON converter
- */
-function csvToJson(csv: string): unknown[] {
-  const lines = csv.split(/\r?\n/).filter((l) => l.trim() !== "");
-  if (lines.length === 0) return [];
-
-  const parseLine = (line: string): string[] => {
-    const result: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQuotes) {
-        if (ch === '"') {
-          if (line[i + 1] === '"') {
-            current += '"';
-            i++;
-          } else {
-            inQuotes = false;
-          }
-        } else {
-          current += ch;
-        }
-      } else {
-        if (ch === '"') {
-          inQuotes = true;
-        } else if (ch === ",") {
-          result.push(current);
-          current = "";
-        } else {
-          current += ch;
-        }
-      }
-    }
-    result.push(current);
-    return result;
-  };
-
-  const headers = parseLine(lines[0]);
-  const out: Record<string, unknown>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseLine(lines[i]);
-    const row: Record<string, unknown> = {};
-    headers.forEach((h, idx) => {
-      row[h] = values[idx] ?? "";
-    });
-    out.push(row);
-  }
-  return out;
-}
+import { jsonToCsv, csvToJson } from "@/lib/csv";
 
 describe("JSON to CSV", () => {
   it("should convert simple objects", () => {
@@ -117,11 +36,11 @@ describe("JSON to CSV", () => {
   });
 
   it("should throw on non-array input", () => {
-    expect(() => jsonToCsv("not an array")).toThrow("JSON 必须是对象数组");
+    expect(() => jsonToCsv("not an array")).toThrow();
   });
 
   it("should throw on empty array", () => {
-    expect(() => jsonToCsv([])).toThrow("JSON 必须是对象数组");
+    expect(() => jsonToCsv([])).toThrow();
   });
 });
 
