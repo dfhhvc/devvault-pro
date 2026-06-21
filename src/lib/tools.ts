@@ -27,6 +27,7 @@ export const toolCategories: ToolCategory[] = [
       { id: "json-yaml", label: "JSON ↔ YAML", description: "JSON 与 YAML 互转" },
       { id: "json-csv", label: "JSON ↔ CSV", description: "JSON 与 CSV 互转" },
       { id: "json-path", label: "JSONPath 查询", description: "使用 JSONPath 查询 JSON" },
+      { id: "json-to-ts", label: "JSON → TypeScript", description: "从 JSON 生成 TypeScript 接口定义" },
     ],
   },
   {
@@ -73,6 +74,15 @@ export const toolCategories: ToolCategory[] = [
     tools: [
       { id: "timestamp", label: "时间戳转换", description: "Unix 时间戳与日期互转" },
       { id: "timezone", label: "时区转换", description: "多时区时间显示" },
+    ],
+  },
+  {
+    id: "convert",
+    label: "转换工具",
+    icon: "Palette",
+    tools: [
+      { id: "color-converter", label: "颜色转换器", description: "HEX / RGB / HSL / OKLCH 互转" },
+      { id: "diff-checker", label: "文本 Diff 对比", description: "逐行对比两段文本差异" },
     ],
   },
 ];

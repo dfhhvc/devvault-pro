@@ -21,6 +21,9 @@ import { UuidTool } from "@/components/tools/uuid";
 import { PasswordTool } from "@/components/tools/password";
 import { TimestampTool } from "@/components/tools/timestamp";
 import { TimezoneTool } from "@/components/tools/timezone";
+import { JsonToTsTool } from "@/components/tools/json-to-ts";
+import { ColorConverterTool } from "@/components/tools/color-converter";
+import { DiffCheckerTool } from "@/components/tools/diff-checker";
 import { ErrorBoundary } from "@/components/error-boundary";
 
 const toolMap: Record<string, React.ComponentType> = {
@@ -29,6 +32,7 @@ const toolMap: Record<string, React.ComponentType> = {
   "json-yaml": JsonYamlTool,
   "json-csv": JsonCsvTool,
   "json-path": JsonPathTool,
+  "json-to-ts": JsonToTsTool,
   base64: Base64Tool,
   "url-encode": UrlEncodeTool,
   "html-entity": HtmlEntityTool,
@@ -40,6 +44,8 @@ const toolMap: Record<string, React.ComponentType> = {
   password: PasswordTool,
   timestamp: TimestampTool,
   timezone: TimezoneTool,
+  "color-converter": ColorConverterTool,
+  "diff-checker": DiffCheckerTool,
 };
 
 export function ToolRenderer({ toolId }: { toolId: string }) {

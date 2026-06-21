@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-21
+
+### Added
+- **JSON → TypeScript generator**: Auto-generates TypeScript interface definitions from JSON input. Differentiating feature not found in it-tools or CyberChef.
+- **Color Converter**: Converts between HEX, RGB, HSL, and OKLCH color formats with live preview swatch.
+- **Text Diff Checker**: Line-by-line text comparison using LCS algorithm with addition/deletion highlighting.
+- New tool category "转换工具" (Converters) in sidebar.
+- New logo SVG with distinctive vault + code design.
+- Realistic SVG screenshots showing actual tool UI (JSON→TS and Color Converter).
+- README comparison table vs it-tools and CyberChef.
+
+### Changed
+- Total tools: 15 → 18
+- README completely rewritten with comparison table and clearer value proposition
+- Version bumped to 1.2.0
+
 ## [1.1.0] - 2026-06-21
 
 ### Fixed

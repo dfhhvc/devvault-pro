@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <g transform="translate(256,256)">
+    <path d="M0,-140 L120,-100 L120,30 Q120,110 0,150 Q-120,110 -120,30 L-120,-100 Z" fill="none" stroke="#3b82f6" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M0,-110 L95,-78 L95,25 Q95,90 0,125 Q-95,90 -95,25 L-95,-78 Z" fill="#1e293b" stroke="#60a5fa" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M-45,-15 L-45,30 Q-45,55 -25,70 L25,70 Q45,55 45,30 L45,-15" fill="none" stroke="#60a5fa" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="-45" y1="-15" x2="45" y2="-15" stroke="#60a5fa" stroke-width="10" stroke-linecap="round"/>
+    <rect x="-25" y="-15" width="50" height="-25" rx="6" fill="#3b82f6"/>
+    <circle cx="0" cy="-25" r="6" fill="#0f172a"/>
+    <circle cx="-15" cy="25" r="6" fill="#60a5fa"/>
+    <circle cx="15" cy="25" r="6" fill="#60a5fa"/>
+  </g>
+</svg>
